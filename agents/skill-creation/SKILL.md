@@ -38,7 +38,26 @@ SKILL.md asks "what do you want to do?" → routes to workflow → workflow spec
 - **templates/** - Consistent output structures Claude copies and fills (plans, specs, configs)
 - **scripts/** - Executable code Claude runs as-is (deploy, setup, API calls)
 
-### 4. Pure XML Structure
+### 4. System Skill Pattern (Advanced)
+
+For skills that need persistent state and compounding value:
+
+```
+skill-name/
+├── SKILL.md              # OODA loop + decision tree
+├── skill-name            # CLI binary (compiled)
+└── skill-name.db         # SQLite database (auto-created)
+```
+
+**The Pattern:** CLI + SKILL.md + Database
+
+Give Claude a CLI to operate a system, a SKILL.md explaining the OODA loop (Observe → Orient → Decide → Act), and a database for persistent memory. Value compounds with each interaction.
+
+**When to use:** Personal data systems, trackers, journals, workflows where history informs decisions.
+
+See references/system-skill-pattern.md for complete documentation.
+
+### 5. Pure XML Structure
 
 No markdown headings (#, ##, ###) in skill body. Use semantic XML tags:
 ```xml
@@ -49,7 +68,7 @@ No markdown headings (#, ##, ###) in skill body. Use semantic XML tags:
 
 Keep markdown formatting within content (bold, lists, code blocks).
 
-### 5. Progressive Disclosure
+### 6. Progressive Disclosure
 
 SKILL.md under 500 lines. Split detailed content into reference files. Load only what's needed for the current workflow.
 </essential_principles>
@@ -68,7 +87,7 @@ What would you like to do?
 <routing>
 | Response | Next Action | Workflow |
 |----------|-------------|----------|
-| 1, "create", "new", "build" | Ask: "Task-execution skill or domain expertise skill?" | Route to appropriate create workflow |
+| 1, "create", "new", "build" | Ask: "What type of skill?" | Route to appropriate create workflow |
 | 2, "audit", "modify", "existing" | Ask: "Path to skill?" | Route to appropriate workflow |
 | 3, "add", "component" | Ask: "Add what? (workflow/reference/template/script)" | workflows/add-{type}.md |
 | 4, "guidance", "help" | General guidance | workflows/get-guidance.md |
@@ -76,6 +95,7 @@ What would you like to do?
 **Progressive disclosure for option 1 (create):**
 - If user selects "Task-execution skill" → workflows/create-new-skill.md
 - If user selects "Domain expertise skill" → workflows/create-domain-expertise-skill.md
+- If user selects "System skill" (CLI + database + persistence) → workflows/create-system-skill.md
 
 **Progressive disclosure for option 3 (add component):**
 - If user specifies workflow → workflows/add-workflow.md
@@ -88,6 +108,7 @@ What would you like to do?
 - "verify content", "check if current" → workflows/verify-skill.md
 - "create domain expertise", "exhaustive knowledge base" → workflows/create-domain-expertise-skill.md
 - "create skill for X", "build new skill" → workflows/create-new-skill.md
+- "create system skill", "persistent skill", "CLI + database", "stateful skill", "skill with database" → workflows/create-system-skill.md
 - "add workflow", "add reference", etc. → workflows/add-{type}.md
 - "upgrade to router" → workflows/upgrade-to-router.md
 
@@ -133,6 +154,25 @@ scripts/:
   Executable code Claude runs as-is
   (deploy, setup, API calls, data processing)
 ```
+
+**System skill (CLI + database):**
+```
+skill-name/
+├── SKILL.md       # OODA loop + decision tree
+├── skill-name     # CLI binary
+└── skill-name.db  # SQLite (auto-created)
+
+SKILL.md sections:
+  <overview> - What system does + "This is a System Skill"
+  <mental_model> - OODA loop (Observe→Orient→Decide→Act)
+  <dependencies> - Binary + database locations
+  <quick_decision_tree> - Route user requests
+  <core_commands> - CLI documentation
+  <pattern_recognition> - Insights by data volume
+  <milestones> - Celebrate progress
+  <common_pitfalls> - What to avoid
+  <success_criteria> - Value compounds over time
+```
 </quick_reference>
 
 <reference_index>
@@ -144,7 +184,7 @@ All in `references/`:
 **Principles:** core-principles.md, be-clear-and-direct.md, use-xml-tags.md
 **Patterns:** common-patterns.md, workflows-and-validation.md
 **Assets:** using-templates.md, using-scripts.md
-**Advanced:** executable-code.md, api-security.md, iteration-and-testing.md
+**Advanced:** executable-code.md, api-security.md, iteration-and-testing.md, system-skill-pattern.md
 </reference_index>
 
 <workflows_index>
@@ -154,8 +194,9 @@ All in `workflows/`:
 
 | Workflow | Purpose |
 |----------|---------|
-| create-new-skill.md | Build a skill from scratch |
-| create-domain-expertise-skill.md | Build exhaustive domain knowledge base for build/ |
+| create-new-skill.md | Build a task-execution skill from scratch |
+| create-domain-expertise-skill.md | Build exhaustive domain knowledge base for expertise/ |
+| create-system-skill.md | Build stateful CLI + database skill with compounding value |
 | audit-skill.md | Analyze skill against best practices |
 | verify-skill.md | Check if content is still accurate |
 | add-workflow.md | Add a workflow to existing skill |
@@ -189,4 +230,11 @@ A well-structured skill:
 - Keeps SKILL.md under 500 lines
 - Asks minimal clarifying questions only when truly needed
 - Has been tested with real usage
+
+**Additional criteria for System Skills:**
+- CLI binary is self-contained (no dependencies)
+- CLI supports --help and --json flags
+- SKILL.md documents OODA loop (Observe → Orient → Decide → Act)
+- Pattern recognition guidance for different data volumes
+- Value demonstrably compounds with usage
 </success_criteria>

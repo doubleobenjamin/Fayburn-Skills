@@ -167,6 +167,25 @@ references/
 └── anti-patterns.md       # Common mistakes, what NOT to do
 ```
 
+**For macOS app development example:**
+```
+references/
+├── app-architecture.md     # State management, dependency injection
+├── swiftui-patterns.md     # Declarative UI patterns
+├── appkit-integration.md   # Using AppKit with SwiftUI
+├── concurrency-patterns.md # Async/await, actors, structured concurrency
+├── data-persistence.md     # Storage strategies
+├── networking.md           # URLSession, async networking
+├── system-apis.md          # macOS-specific frameworks
+├── testing-tdd.md          # Testing patterns
+├── testing-debugging.md    # Debugging tools and techniques
+├── performance.md          # Profiling, optimization
+├── design-system.md        # Platform conventions
+├── macos-polish.md         # Native feel, accessibility
+├── security-code-signing.md # Signing, notarization
+└── project-scaffolding.md  # CLI-based setup
+```
+
 **For each reference file:**
 - Pure XML structure
 - Decision trees: "If X, use Y. If Z, use A instead."
@@ -178,27 +197,265 @@ references/
 
 ## Step 6: Create SKILL.md
 
-Domain expertise skills use router pattern with essential principles. See references/recommended-structure.md for the full template.
+Domain expertise skills use router pattern with essential principles:
+
+```yaml
+---
+name: build-{domain-name}
+description: Build {domain things} from scratch through shipping. Full lifecycle - build, debug, test, optimize, ship. {Any specific constraints like "CLI-only, no IDE"}.
+---
+
+<essential_principles>
+## How {This Domain} Works
+
+{Domain-specific principles that ALWAYS apply}
+
+### 1. {First Principle}
+{Critical practice that can't be skipped}
+
+### 2. {Second Principle}
+{Another fundamental practice}
+
+### 3. {Third Principle}
+{Core workflow pattern}
+</essential_principles>
+
+<intake>
+**Ask the user:**
+
+What would you like to do?
+1. Build a new {thing}
+2. Debug an existing {thing}
+3. Add a feature
+4. Write/run tests
+5. Optimize performance
+6. Ship/release
+7. Something else
+
+**Then read the matching workflow from `workflows/` and follow it.**
+</intake>
+
+<routing>
+| Response | Workflow |
+|----------|----------|
+| 1, "new", "create", "build", "start" | `workflows/build-new-{thing}.md` |
+| 2, "broken", "fix", "debug", "crash", "bug" | `workflows/debug-{thing}.md` |
+| 3, "add", "feature", "implement", "change" | `workflows/add-feature.md` |
+| 4, "test", "tests", "TDD", "coverage" | `workflows/write-tests.md` |
+| 5, "slow", "optimize", "performance", "fast" | `workflows/optimize-performance.md` |
+| 6, "ship", "release", "deploy", "publish" | `workflows/ship-{thing}.md` |
+| 7, other | Clarify, then select workflow or references |
+</routing>
+
+<verification_loop>
+## After Every Change
+
+{Domain-specific verification steps}
+
+Example for compiled languages:
+```bash
+# 1. Does it build?
+{build command}
+
+# 2. Do tests pass?
+{test command}
+
+# 3. Does it run?
+{run command}
+```
+
+Report to the user:
+- "Build: ✓"
+- "Tests: X pass, Y fail"
+- "Ready for you to check [specific thing]"
+</verification_loop>
+
+<reference_index>
+## Domain Knowledge
+
+All in `references/`:
+
+**Architecture:** {list files}
+**{Domain Area}:** {list files}
+**{Domain Area}:** {list files}
+**Development:** {list files}
+**Shipping:** {list files}
+</reference_index>
+
+<workflows_index>
+## Workflows
+
+All in `workflows/`:
+
+| File | Purpose |
+|------|---------|
+| build-new-{thing}.md | Create new {thing} from scratch |
+| debug-{thing}.md | Find and fix bugs |
+| add-feature.md | Add to existing {thing} |
+| write-tests.md | Write and run tests |
+| optimize-performance.md | Profile and speed up |
+| ship-{thing}.md | Deploy/distribute |
+</workflows_index>
+```
 
 ## Step 7: Write Workflows
 
-For EACH workflow identified in Step 3, create a workflow file with:
-- `<required_reading>` - Which references to load
-- `<process>` - Step-by-step implementation steps
-- `<anti_patterns>` - Common mistakes to avoid
-- `<success_criteria>` - How to know it worked
+For EACH workflow identified in Step 3:
+
+### Workflow Template
+
+```markdown
+# Workflow: {Workflow Name}
+
+<required_reading>
+**Read these reference files NOW before {doing the task}:**
+1. references/{relevant-file}.md
+2. references/{another-relevant-file}.md
+3. references/{third-relevant-file}.md
+</required_reading>
+
+<process>
+## Step 1: {First Action}
+
+{What to do}
+
+## Step 2: {Second Action}
+
+{What to do - actual implementation steps}
+
+## Step 3: {Third Action}
+
+{What to do}
+
+## Step 4: Verify
+
+{How to prove it works}
+
+```bash
+{verification commands}
+```
+</process>
+
+<anti_patterns>
+Avoid:
+- {Common mistake 1}
+- {Common mistake 2}
+- {Common mistake 3}
+</anti_patterns>
+
+<success_criteria>
+A well-{completed task}:
+- {Criterion 1}
+- {Criterion 2}
+- {Criterion 3}
+- Builds/runs without errors
+- Tests pass
+- Feels {native/professional/correct}
+</success_criteria>
+```
+
+**Key workflow characteristics:**
+- Starts with required_reading (which references to load)
+- Contains actual implementation steps (not just "read references")
+- Includes verification steps
+- Has success criteria
+- Documents anti-patterns
 
 ## Step 8: Write Comprehensive References
 
-For EACH reference file identified in Step 5, use pure XML structure with:
-- `<overview>` - Brief introduction
-- `<options>` - Available approaches/libraries with pros/cons
-- `<decision_tree>` - How to choose the right approach
-- `<patterns>` - Common patterns with code examples
-- `<anti_patterns>` - What NOT to do
-- `<platform_considerations>` - Platform-specific notes
+For EACH reference file identified in Step 5:
+
+### Structure Template
+
+```xml
+<overview>
+Brief introduction to this domain area
+</overview>
+
+<options>
+## Available Approaches/Libraries
+
+<option name="Library A">
+**When to use:** [specific scenarios]
+**Strengths:** [what it's best at]
+**Weaknesses:** [what it's not good for]
+**Current status:** v{version}, actively maintained
+**Learning curve:** [easy/medium/hard]
+
+```code
+# Example usage
+```
+</option>
+
+<option name="Library B">
+[Same structure]
+</option>
+</options>
+
+<decision_tree>
+## Choosing the Right Approach
+
+**If you need [X]:** Use [Library A]
+**If you need [Y]:** Use [Library B]
+**If you have [constraint Z]:** Use [Library C]
+
+**Avoid [Library D] if:** [specific scenarios]
+</decision_tree>
+
+<patterns>
+## Common Patterns
+
+<pattern name="Pattern Name">
+**Use when:** [scenario]
+**Implementation:** [code example]
+**Considerations:** [trade-offs]
+</pattern>
+</patterns>
+
+<anti_patterns>
+## What NOT to Do
+
+<anti_pattern name="Common Mistake">
+**Problem:** [what people do wrong]
+**Why it's bad:** [consequences]
+**Instead:** [correct approach]
+</anti_pattern>
+</anti_patterns>
+
+<platform_considerations>
+## Platform-Specific Notes
+
+**Windows:** [considerations]
+**macOS:** [considerations]
+**Linux:** [considerations]
+**Mobile:** [if applicable]
+</platform_considerations>
+```
+
+### Quality Standards
+
+Each reference must include:
+- **Current information** (verify dates)
+- **Multiple options** (not just one library)
+- **Decision guidance** (when to use each)
+- **Real examples** (working code, not pseudocode)
+- **Trade-offs** (no silver bullets)
+- **Anti-patterns** (what NOT to do)
+
+### Common Reference Files
+
+Most domains need:
+- **architecture.md** - How to structure projects
+- **libraries.md** - Ecosystem overview with comparisons
+- **patterns.md** - Design patterns specific to domain
+- **testing-debugging.md** - How to verify correctness
+- **performance.md** - Optimization strategies
+- **deployment.md** - How to ship/distribute
+- **anti-patterns.md** - Common mistakes consolidated
 
 ## Step 9: Validate Completeness
+
+### Completeness Checklist
 
 Ask: "Could a user build a professional {domain thing} from scratch through shipping using just this skill?"
 
@@ -212,6 +469,31 @@ Ask: "Could a user build a professional {domain thing} from scratch through ship
 - [ ] Current as of 2024-2025?
 - [ ] Workflows actually execute tasks (not just reference knowledge)?
 - [ ] Each workflow specifies which references to read?
+
+**Specific gaps to check:**
+- [ ] Testing strategy covered?
+- [ ] Debugging/profiling tools listed?
+- [ ] Deployment/distribution methods documented?
+- [ ] Performance optimization addressed?
+- [ ] Security considerations (if applicable)?
+- [ ] Asset/resource management (if applicable)?
+- [ ] Networking (if applicable)?
+
+### Dual-Purpose Test
+
+Test both use cases:
+
+**Direct invocation:** "Can a user invoke this skill and build something?"
+- Intake routes to appropriate workflow
+- Workflow loads relevant references
+- Workflow provides implementation steps
+- Success criteria are clear
+
+**Knowledge reference:** "Can create-plans load references to plan a project?"
+- References contain decision guidance
+- All options compared
+- Complete lifecycle covered
+- Architecture patterns documented
 
 ## Step 10: Create Directory and Files
 
@@ -229,9 +511,53 @@ mkdir -p ~/.claude/skills/expertise/{domain-name}/references
 ls -R ~/.claude/skills/expertise/{domain-name}
 ```
 
-## Step 11: Final Quality Check
+## Step 11: Document in create-plans
 
-Review entire skill against quality criteria in references/skill-structure.md.
+Update `~/.claude/skills/create-plans/SKILL.md` to reference this new domain:
+
+Add to the domain inference table:
+```markdown
+| "{keyword}", "{domain term}" | expertise/{domain-name} |
+```
+
+So create-plans can auto-detect and offer to load it.
+
+## Step 12: Final Quality Check
+
+Review entire skill:
+
+**SKILL.md:**
+- [ ] Name matches directory (build-{domain-name})
+- [ ] Description explains it builds things from scratch through shipping
+- [ ] Essential principles inline (always loaded)
+- [ ] Intake asks what user wants to do
+- [ ] Routing maps to workflows
+- [ ] Reference index complete and organized
+- [ ] Workflows index complete
+
+**Workflows:**
+- [ ] Each workflow starts with required_reading
+- [ ] Each workflow has actual implementation steps
+- [ ] Each workflow has verification steps
+- [ ] Each workflow has success criteria
+- [ ] Workflows cover full lifecycle (build, debug, test, optimize, ship)
+
+**References:**
+- [ ] Pure XML structure (no markdown headings)
+- [ ] Decision guidance in every file
+- [ ] Current versions verified
+- [ ] Code examples work
+- [ ] Anti-patterns documented
+- [ ] Platform considerations included
+
+**Completeness:**
+- [ ] A professional practitioner would find this comprehensive
+- [ ] No major libraries/patterns missing
+- [ ] Full lifecycle covered
+- [ ] Passes the "build from scratch through shipping" test
+- [ ] Can be invoked directly by users
+- [ ] Can be loaded by create-plans for knowledge
+
 </process>
 
 <success_criteria>
@@ -248,6 +574,32 @@ Domain expertise skill is complete when:
 - [ ] Full lifecycle covered (build → debug → test → optimize → ship)
 - [ ] Platform-specific considerations included
 - [ ] Located in ~/.claude/skills/expertise/{domain-name}/
+- [ ] Referenced in create-plans domain inference table
 - [ ] Passes dual-purpose test: Can be invoked directly AND loaded for knowledge
 - [ ] User can build something professional from scratch through shipping
 </success_criteria>
+
+<anti_patterns>
+**DON'T:**
+- Copy tutorial content without verification
+- Include only "getting started" material
+- Skip the "when NOT to use" guidance
+- Forget to check if libraries are still maintained
+- Organize by document type instead of domain concerns
+- Make it knowledge-only with no execution workflows
+- Skip verification steps in workflows
+- Include outdated content from old blog posts
+- Skip decision trees and comparisons
+- Create workflows that just say "read the references"
+
+**DO:**
+- Verify everything is current
+- Include complete lifecycle (build → ship)
+- Provide decision guidance
+- Document anti-patterns
+- Make workflows execute real tasks
+- Start workflows with required_reading
+- Include verification in every workflow
+- Make it exhaustive, not minimal
+- Test both direct invocation and knowledge reference use cases
+</anti_patterns>
