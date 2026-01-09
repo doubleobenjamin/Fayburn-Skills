@@ -1,0 +1,27 @@
+{
+  "name": "codebase-skill-generator",
+  "description": "Analyzes codebase with parallel agents and generates tailored skills for security, performance, architecture, and more",
+  "version": "1.0.0",
+  "author": {
+    "name": "Zero"
+  },
+  "commands": [
+    "./commands/analyze-codebase.md"
+  ],
+  "agents": [
+    "./agents/tech-stack-detector.md",
+    "./agents/security-analyzer.md",
+    "./agents/performance-analyzer.md",
+    "./agents/architecture-analyzer.md",
+    "./agents/dependency-analyzer.md",
+    "./agents/code-quality-analyzer.md",
+    "./agents/react-analyzer.md",
+    "./agents/backend-analyzer.md",
+    "./agents/frontend-analyzer.md",
+    "./agents/database-analyzer.md",
+    "./agents/testing-analyzer.md"
+  ],
+  "skills": [
+    "./agents/skill-creation"
+  ]
+}
