@@ -7,19 +7,19 @@ argument-hint: [skill-prefix]
 <objective>
 Orchestrate parallel sub-agents to comprehensively analyze this codebase and generate tailored skills for optimal code generation.
 
-Each analyzer agent:
-1. Analyzes a specific aspect (security, performance, architecture, etc.)
-2. Spawns a skill-creation agent that follows `@codebase-skill-generator:skill-creation/SKILL.md`
-3. The skill-creation agent creates a properly structured skill from the findings
-
-This architecture keeps analyzer context windows focused on codebase analysis, while skill-creation agents focus on following the skill creation workflow.
+The workflow:
+1. Detect tech stack to determine which analyzers to run
+2. Run analyzers in parallel - each writes findings to `.claude/findings/`
+3. Read each findings file and invoke skill-creation to generate standardized skills
+4. Summary of all generated skills
 
 Optional argument: `$ARGUMENTS` sets a custom prefix for generated skills (default: "codebase").
 </objective>
 
 <context>
 Skill prefix: $ARGUMENTS (use "codebase" if empty)
-Target directory: .claude/skills/
+Findings directory: .claude/findings/
+Skills directory: .claude/skills/
 Skill creation workflow: @codebase-skill-generator:skill-creation/SKILL.md
 </context>
 
@@ -30,51 +30,85 @@ First, spawn the `tech-stack-detector` agent to identify all technologies in use
 
 ```
 Task tool:
-  subagent_type: tech-stack-detector
-  prompt: "Analyze this codebase and return a structured inventory of detected technologies. Output as JSON with keys: frontend, backend, database, testing, build_tools, conditional_analyzers. The conditional_analyzers object should have boolean flags for: react, backend, frontend, database, testing."
+  subagent_type: codebase-skill-generator:tech-stack-detector
+  prompt: "Analyze this codebase and return a structured inventory of detected technologies. Output as JSON with keys: primary_language, frontend, backend, database, testing, devtools, conditional_analyzers. The conditional_analyzers object should have boolean flags for: react, backend, frontend, database, testing."
 ```
 
-Wait for completion and capture the tech stack inventory.
+Wait for completion and capture the tech stack inventory as `{tech_stack_json}`.
 
-## Phase 2: Parallel Analysis (Based on Detection)
+Set `{prefix}` to $ARGUMENTS if provided, otherwise "codebase".
 
-Spawn these agents IN PARALLEL using a single message with multiple Task tool calls:
+## Phase 2: Parallel Analysis
+
+Create the findings directory first:
+```bash
+mkdir -p .claude/findings
+```
+
+Spawn these agents IN PARALLEL using a single message with multiple Task tool calls.
 
 **Always run (5 agents):**
-1. `security-analyzer` - Security best practices for detected stack
-2. `performance-analyzer` - Performance optimization patterns
-3. `architecture-analyzer` - Codebase structure and conventions
-4. `dependency-analyzer` - Dependency management practices
-5. `code-quality-analyzer` - Linting, formatting, quality standards
+
+1. `codebase-skill-generator:security-analyzer`
+2. `codebase-skill-generator:performance-analyzer`
+3. `codebase-skill-generator:architecture-analyzer`
+4. `codebase-skill-generator:dependency-analyzer`
+5. `codebase-skill-generator:code-quality-analyzer`
 
 **Conditionally run (based on Phase 1 `conditional_analyzers` flags):**
-6. `react-analyzer` - Only if `conditional_analyzers.react == true`
-7. `backend-analyzer` - Only if `conditional_analyzers.backend == true`
-8. `frontend-analyzer` - Only if `conditional_analyzers.frontend == true` (non-React)
-9. `database-analyzer` - Only if `conditional_analyzers.database == true`
-10. `testing-analyzer` - Only if `conditional_analyzers.testing == true`
+
+6. `codebase-skill-generator:react-analyzer` - Only if `conditional_analyzers.react == true`
+7. `codebase-skill-generator:backend-analyzer` - Only if `conditional_analyzers.backend == true`
+8. `codebase-skill-generator:frontend-analyzer` - Only if `conditional_analyzers.frontend == true` (non-React)
+9. `codebase-skill-generator:database-analyzer` - Only if `conditional_analyzers.database == true`
+10. `codebase-skill-generator:testing-analyzer` - Only if `conditional_analyzers.testing == true`
 
 Each agent prompt should include:
-- The detected tech stack from Phase 1
-- The skill prefix to use
-- Note: Agents will spawn their own skill-creation agents
-
-Example agent prompt:
 ```
 Tech stack detected: {tech_stack_json}
 Skill prefix: {prefix}
 
 Analyze the codebase for [aspect] patterns and best practices specific to the detected technologies.
 
-After analysis, spawn a skill-creation agent via Task tool with your findings. The skill-creation agent should read and follow @codebase-skill-generator:skill-creation/SKILL.md to create a properly structured skill.
+Write your findings to: .claude/findings/{prefix}-[aspect].md
+
+Return confirmation when findings file is written.
 ```
 
-## Phase 3: Summary
+Wait for ALL analyzers to complete.
 
-After all agents complete, provide a summary:
+## Phase 3: Skill Creation (Sequential)
+
+For each findings file in `.claude/findings/{prefix}-*.md`:
+
+1. Read the findings file
+2. Invoke the skill-creation skill with a prompt like:
+
+```
+Use the skill-creation workflow at @codebase-skill-generator:skill-creation/SKILL.md
+
+I want to create a new skill based on these analysis findings.
+
+Skill details:
+- Name: {prefix}-{aspect} (e.g., myapp-security)
+- Location: .claude/skills/{prefix}-{aspect}/SKILL.md
+- Description: [Aspect] patterns and best practices for this codebase. Use when writing [aspect]-related code.
+
+Analysis findings:
+{contents of findings file}
+
+Create a simple skill (not router pattern) that captures the key patterns, conventions, and checklists from these findings.
+```
+
+Repeat for each findings file.
+
+## Phase 4: Summary
+
+After all skills are created, provide a summary:
 - List all generated skills with their locations
-- Note any agents that were skipped (and why)
+- Note any analyzers that were skipped (and why)
 - Explain how to use the generated skills
+- Optionally suggest cleanup of `.claude/findings/` directory
 </process>
 
 <agent_coordination>
@@ -82,26 +116,36 @@ After all agents complete, provide a summary:
 
 1. Phase 1 MUST complete before Phase 2 starts (tech stack informs conditional agents)
 2. Phase 2 agents run in PARALLEL (use single message with multiple Task calls)
-3. Each analyzer agent spawns its own skill-creation agent via Task tool
-4. Skill-creation agents follow the workflow at `@codebase-skill-generator:skill-creation/SKILL.md`
+3. Each analyzer writes findings to `.claude/findings/{prefix}-{aspect}.md`
+4. Phase 3 runs SEQUENTIALLY - main conversation invokes skill-creation for each findings file
 5. Use the skill prefix from $ARGUMENTS (default "codebase") for all generated skills
 
 **Agent prompts should include:**
 - Full tech stack context from Phase 1
 - Clear analysis scope
 - Skill prefix for naming
+- Output path for findings file
 </agent_coordination>
 
 <output>
-Generated skills structure:
+Generated files structure:
 ```
-.claude/skills/
-├── {prefix}-security/SKILL.md
-├── {prefix}-performance/SKILL.md
-├── {prefix}-architecture/SKILL.md
-├── {prefix}-dependencies/SKILL.md
-├── {prefix}-code-quality/SKILL.md
-└── [conditional skills based on detected stack]
+.claude/
+├── findings/                          # Analysis results (can be deleted after)
+│   ├── {prefix}-security.md
+│   ├── {prefix}-performance.md
+│   ├── {prefix}-architecture.md
+│   ├── {prefix}-dependencies.md
+│   ├── {prefix}-code-quality.md
+│   └── [conditional findings]
+│
+└── skills/                            # Generated skills (permanent)
+    ├── {prefix}-security/SKILL.md
+    ├── {prefix}-performance/SKILL.md
+    ├── {prefix}-architecture/SKILL.md
+    ├── {prefix}-dependencies/SKILL.md
+    ├── {prefix}-code-quality/SKILL.md
+    └── [conditional skills]
 ```
 
 Each skill contains:
@@ -112,9 +156,9 @@ Each skill contains:
 
 <success_criteria>
 - Tech stack detection completed and informed agent selection
-- All applicable agents ran in parallel
-- Each analyzer spawned a skill-creation agent with findings
-- Skills created following the workflow at @codebase-skill-generator:skill-creation/SKILL.md
+- All applicable analyzers ran in parallel and wrote findings files
+- All findings files processed through skill-creation workflow
+- Skills created following standardized structure
 - Skills saved to `.claude/skills/{prefix}-*/SKILL.md`
 - Summary provided listing all generated skills
 </success_criteria>
