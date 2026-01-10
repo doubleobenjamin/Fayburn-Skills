@@ -10,7 +10,7 @@ Orchestrate parallel sub-agents to comprehensively analyze this codebase and gen
 The workflow:
 1. Detect tech stack to determine which analyzers to run
 2. Run analyzers in parallel - each writes findings to `.claude/findings/`
-3. Read each findings file and invoke skill-creation to generate standardized skills
+3. Spawn subagents in parallel - each invokes skill-creation for one findings file
 4. Summary of all generated skills
 
 Optional argument: `$ARGUMENTS` sets a custom prefix for generated skills (default: "codebase").
@@ -77,30 +77,39 @@ Return confirmation when findings file is written.
 
 Wait for ALL analyzers to complete.
 
-## Phase 3: Skill Creation (Sequential)
+## Phase 3: Skill Creation (PARALLEL via Subagents)
 
-For each findings file in `.claude/findings/{prefix}-*.md`:
+First, glob for all findings files in `.claude/findings/{prefix}-*.md`.
 
-1. Read the findings file
-2. Invoke the skill-creation skill with a prompt like:
+Then spawn a subagent for EACH findings file IN PARALLEL (single message with multiple Task tool calls).
+
+For each findings file found (e.g., `{prefix}-security.md`, `{prefix}-performance.md`, etc.):
 
 ```
-Use the skill-creation workflow at @codebase-skill-generator:skill-creation/SKILL.md
+Task tool:
+  subagent_type: general-purpose
+  prompt: |
+    Create a skill from analysis findings.
 
-I want to create a new skill based on these analysis findings.
+    Steps:
+    1. Read the findings file: .claude/findings/{prefix}-{aspect}.md
+    2. Use the Skill tool to invoke: codebase-skill-generator:skill-creation
+    3. When the skill-creation skill asks what you want to do, respond: "Create new skill"
+    4. Provide these details:
+       - Type: Task-execution skill (simple)
+       - Name: {prefix}-{aspect}
+       - Location: .claude/skills/{prefix}-{aspect}/SKILL.md
+       - Description: {Aspect} patterns and best practices. Use when writing {aspect}-related code.
+    5. When asked for content, provide the findings you read
+    6. Follow the skill-creation workflow to completion
+    7. Confirm the skill was created at the expected location
 
-Skill details:
-- Name: {prefix}-{aspect} (e.g., myapp-security)
-- Location: .claude/skills/{prefix}-{aspect}/SKILL.md
-- Description: [Aspect] patterns and best practices for this codebase. Use when writing [aspect]-related code.
-
-Analysis findings:
-{contents of findings file}
-
-Create a simple skill (not router pattern) that captures the key patterns, conventions, and checklists from these findings.
+    Return: "Created skill at .claude/skills/{prefix}-{aspect}/SKILL.md" when done.
 ```
 
-Repeat for each findings file.
+**Critical**: All Task tool calls MUST be in a SINGLE message to run in parallel.
+
+Wait for all subagents to complete before proceeding to Phase 4.
 
 ## Phase 4: Summary
 
@@ -117,14 +126,19 @@ After all skills are created, provide a summary:
 1. Phase 1 MUST complete before Phase 2 starts (tech stack informs conditional agents)
 2. Phase 2 agents run in PARALLEL (use single message with multiple Task calls)
 3. Each analyzer writes findings to `.claude/findings/{prefix}-{aspect}.md`
-4. Phase 3 runs SEQUENTIALLY - main conversation invokes skill-creation for each findings file
+4. Phase 3 runs in PARALLEL - spawn subagents that invoke skill-creation skill
 5. Use the skill prefix from $ARGUMENTS (default "codebase") for all generated skills
 
-**Agent prompts should include:**
+**Phase 2 agent prompts should include:**
 - Full tech stack context from Phase 1
 - Clear analysis scope
 - Skill prefix for naming
 - Output path for findings file
+
+**Phase 3 subagent prompts should include:**
+- Path to the specific findings file
+- Skill name and location
+- Instructions to invoke skill-creation skill
 </agent_coordination>
 
 <output>

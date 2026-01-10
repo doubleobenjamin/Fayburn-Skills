@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Fayburn Skills Marketplace - Codebase analysis and skill generation plugins",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "codebase-skill-generator",
       "source": "./plugins/codebase-skill-generator",
       "description": "Analyzes codebase with parallel agents and generates tailored skills for security, performance, architecture, and more",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "Fayburn"
       }
