@@ -197,7 +197,7 @@ Make validation scripts verbose with specific error messages:
 **Bad error message**:
 "Invalid field"
 
-Specific errors help Claude fix issues in one iteration instead of multiple rounds of guessing.
+Specific errors help Claude fix issues without guessing.
 </implementation_tip>
 
 <when_to_use>
