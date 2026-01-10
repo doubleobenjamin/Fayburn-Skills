@@ -1,0 +1,22 @@
+{
+  "name": "fayburn-marketplace",
+  "owner": {
+    "name": "Fayburn",
+    "email": ""
+  },
+  "metadata": {
+    "description": "Fayburn Skills Marketplace - Codebase analysis and skill generation plugins",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "codebase-skill-generator",
+      "source": ".",
+      "description": "Analyzes codebase with parallel agents and generates tailored skills for security, performance, architecture, and more",
+      "version": "1.0.0",
+      "author": {
+        "name": "Fayburn"
+      }
+    }
+  ]
+}
