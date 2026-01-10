@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "codebase-skill-generator",
-      "source": ".",
+      "source": "./plugins/codebase-skill-generator",
       "description": "Analyzes codebase with parallel agents and generates tailored skills for security, performance, architecture, and more",
       "version": "1.0.0",
       "author": {
