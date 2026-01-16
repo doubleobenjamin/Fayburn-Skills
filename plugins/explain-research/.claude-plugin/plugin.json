@@ -1,0 +1,14 @@
+{
+  "name": "explain-research",
+  "description": "Explains research papers for intuitive understanding through analogical reasoning. Builds mental models, tracks evolving knowledge with SQLite persistence, and surfaces connections between concepts.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Zero"
+  },
+  "commands": [
+    "./commands/explain-research.md"
+  ],
+  "skills": [
+    "./skills/explain-research"
+  ]
+}

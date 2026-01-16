@@ -1,0 +1,774 @@
+#!/usr/bin/env python3
+"""kr - Knowledge Research CLI
+
+A CLI tool for managing research knowledge with SQLite persistence.
+Supports concepts, connections, papers, insights, questions, and spaced repetition.
+"""
+
+import argparse
+import json
+import os
+import sqlite3
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Optional
+
+# Database path
+DB_DIR = Path.home() / ".claude" / "skills" / "explain-research" / "data"
+DB_PATH = DB_DIR / "knowledge.db"
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS concepts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    understanding TEXT,
+    confidence TEXT DEFAULT 'low' CHECK(confidence IN ('low', 'medium', 'high')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS analogies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    concept_id INTEGER NOT NULL,
+    analogy TEXT NOT NULL,
+    limitations TEXT,
+    FOREIGN KEY (concept_id) REFERENCES concepts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_id INTEGER NOT NULL,
+    to_id INTEGER NOT NULL,
+    relation TEXT NOT NULL,
+    note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_id) REFERENCES concepts(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_id) REFERENCES concepts(id) ON DELETE CASCADE,
+    UNIQUE(from_id, to_id, relation)
+);
+
+CREATE TABLE IF NOT EXISTS papers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    url TEXT,
+    summary TEXT,
+    read_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS insights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    paper_id INTEGER,
+    concept_id INTEGER,
+    before_understanding TEXT,
+    after_understanding TEXT,
+    key_insight TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE SET NULL,
+    FOREIGN KEY (concept_id) REFERENCES concepts(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    question TEXT NOT NULL,
+    context TEXT,
+    resolved INTEGER DEFAULT 0,
+    resolution TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    resolved_at DATETIME
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    concept_id INTEGER NOT NULL,
+    quality INTEGER CHECK(quality BETWEEN 1 AND 5),
+    reviewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    next_review DATETIME,
+    FOREIGN KEY (concept_id) REFERENCES concepts(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_concepts_name ON concepts(name);
+CREATE INDEX IF NOT EXISTS idx_connections_from ON connections(from_id);
+CREATE INDEX IF NOT EXISTS idx_connections_to ON connections(to_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_next ON reviews(next_review);
+"""
+
+
+def get_db() -> sqlite3.Connection:
+    """Get database connection, creating schema if needed."""
+    DB_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.executescript(SCHEMA)
+    return conn
+
+
+# === CONCEPT COMMANDS ===
+
+def concept_add(args):
+    """Add a new concept."""
+    conn = get_db()
+    try:
+        cur = conn.execute(
+            "INSERT INTO concepts (name, understanding, confidence) VALUES (?, ?, ?)",
+            (args.name, args.understanding or "", args.confidence)
+        )
+        concept_id = cur.lastrowid
+
+        if args.analogy:
+            conn.execute(
+                "INSERT INTO analogies (concept_id, analogy, limitations) VALUES (?, ?, ?)",
+                (concept_id, args.analogy, args.limits or "")
+            )
+
+        conn.commit()
+        print(f"Added concept: {args.name}")
+    except sqlite3.IntegrityError:
+        print(f"Error: Concept '{args.name}' already exists", file=sys.stderr)
+        sys.exit(1)
+
+
+def concept_show(args):
+    """Show a concept with all details."""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT * FROM concepts WHERE name = ?", (args.name,)
+    ).fetchone()
+
+    if not row:
+        print(f"Error: Concept '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"CONCEPT: {row['name']}")
+    print(f"Understanding: {row['understanding'] or '(none)'}")
+    print(f"Confidence: {row['confidence']}")
+    print(f"Created: {row['created_at'][:10]}")
+
+    # Analogies
+    analogies = conn.execute(
+        "SELECT analogy, limitations FROM analogies WHERE concept_id = ?",
+        (row['id'],)
+    ).fetchall()
+    if analogies:
+        for a in analogies:
+            if a['limitations']:
+                print(f"Analogy: {a['analogy']} (breaks: {a['limitations']})")
+            else:
+                print(f"Analogy: {a['analogy']}")
+
+    # Connections
+    connections = conn.execute("""
+        SELECT c.name, conn.relation FROM connections conn
+        JOIN concepts c ON conn.to_id = c.id WHERE conn.from_id = ?
+        UNION
+        SELECT c.name, conn.relation FROM connections conn
+        JOIN concepts c ON conn.from_id = c.id WHERE conn.to_id = ?
+    """, (row['id'], row['id'])).fetchall()
+    if connections:
+        print(f"Connections: {', '.join(f'{c[0]} ({c[1]})' for c in connections)}")
+
+    # Last review
+    review = conn.execute(
+        "SELECT reviewed_at, next_review FROM reviews WHERE concept_id = ? ORDER BY reviewed_at DESC LIMIT 1",
+        (row['id'],)
+    ).fetchone()
+    if review:
+        print(f"Last review: {review['reviewed_at'][:10]} | Next: {review['next_review'][:10]}")
+
+
+def concept_update(args):
+    """Update a concept."""
+    conn = get_db()
+    updates = []
+    params = []
+
+    if args.understanding:
+        updates.append("understanding = ?")
+        params.append(args.understanding)
+    if args.confidence:
+        updates.append("confidence = ?")
+        params.append(args.confidence)
+
+    if not updates:
+        print("Error: Provide --understanding or --confidence to update", file=sys.stderr)
+        sys.exit(1)
+
+    updates.append("updated_at = CURRENT_TIMESTAMP")
+    params.append(args.name)
+
+    result = conn.execute(
+        f"UPDATE concepts SET {', '.join(updates)} WHERE name = ?",
+        params
+    )
+    conn.commit()
+
+    if result.rowcount == 0:
+        print(f"Error: Concept '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Updated concept: {args.name}")
+
+
+def concept_list(args):
+    """List all concepts."""
+    conn = get_db()
+    query = "SELECT name, confidence, understanding FROM concepts"
+    params = []
+    if args.confidence:
+        query += " WHERE confidence = ?"
+        params.append(args.confidence)
+    query += " ORDER BY name"
+
+    rows = conn.execute(query, params).fetchall()
+    print("CONCEPTS:")
+    for row in rows:
+        short = (row['understanding'] or "")[:50]
+        if len(row['understanding'] or "") > 50:
+            short += "..."
+        print(f"  [{row['confidence'][0].upper()}] {row['name']}: {short}")
+
+
+def concept_delete(args):
+    """Delete a concept."""
+    conn = get_db()
+    result = conn.execute("DELETE FROM concepts WHERE name = ?", (args.name,))
+    conn.commit()
+
+    if result.rowcount == 0:
+        print(f"Error: Concept '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Deleted concept: {args.name}")
+
+
+# === CONNECTION COMMANDS ===
+
+def connect(args):
+    """Create a connection between concepts."""
+    conn = get_db()
+
+    from_row = conn.execute("SELECT id FROM concepts WHERE name = ?", (args.from_concept,)).fetchone()
+    to_row = conn.execute("SELECT id FROM concepts WHERE name = ?", (args.to_concept,)).fetchone()
+
+    if not from_row:
+        print(f"Error: Concept '{args.from_concept}' not found", file=sys.stderr)
+        sys.exit(1)
+    if not to_row:
+        print(f"Error: Concept '{args.to_concept}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        conn.execute(
+            "INSERT INTO connections (from_id, to_id, relation, note) VALUES (?, ?, ?, ?)",
+            (from_row['id'], to_row['id'], args.relation, args.note or "")
+        )
+        conn.commit()
+        print(f"Connected: {args.from_concept} -[{args.relation}]-> {args.to_concept}")
+    except sqlite3.IntegrityError:
+        print("Error: Connection already exists", file=sys.stderr)
+        sys.exit(1)
+
+
+# === PAPER COMMANDS ===
+
+def paper_add(args):
+    """Add a paper."""
+    conn = get_db()
+    cur = conn.execute(
+        "INSERT INTO papers (title, url, summary) VALUES (?, ?, ?)",
+        (args.title, args.url or "", args.summary or "")
+    )
+    conn.commit()
+    print(f"Added paper [{cur.lastrowid}]: {args.title}")
+
+
+def paper_list(args):
+    """List papers."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, title, read_at FROM papers ORDER BY read_at DESC LIMIT 20"
+    ).fetchall()
+
+    print("PAPERS:")
+    for row in rows:
+        print(f"  [{row['id']}] {row['title']} ({row['read_at'][:10]})")
+
+
+def paper_show(args):
+    """Show a paper."""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT * FROM papers WHERE id = ? OR title LIKE ?",
+        (args.query, f"%{args.query}%")
+    ).fetchone()
+
+    if not row:
+        print(f"Error: Paper not found: {args.query}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"PAPER [{row['id']}]: {row['title']}")
+    if row['url']:
+        print(f"URL: {row['url']}")
+    print(f"Read: {row['read_at'][:10]}")
+    if row['summary']:
+        print(f"Summary: {row['summary']}")
+
+    insights = conn.execute(
+        "SELECT key_insight FROM insights WHERE paper_id = ?", (row['id'],)
+    ).fetchall()
+    if insights:
+        print(f"Insights: {'; '.join(i['key_insight'] for i in insights)}")
+
+
+# === INSIGHT COMMANDS ===
+
+def insight_add(args):
+    """Add an insight."""
+    conn = get_db()
+
+    concept_id = None
+    paper_id = None
+
+    if args.concept:
+        row = conn.execute("SELECT id FROM concepts WHERE name = ?", (args.concept,)).fetchone()
+        if row:
+            concept_id = row['id']
+
+    if args.paper:
+        row = conn.execute(
+            "SELECT id FROM papers WHERE id = ? OR title LIKE ?",
+            (args.paper, f"%{args.paper}%")
+        ).fetchone()
+        if row:
+            paper_id = row['id']
+
+    conn.execute(
+        "INSERT INTO insights (paper_id, concept_id, before_understanding, after_understanding, key_insight) VALUES (?, ?, ?, ?, ?)",
+        (paper_id, concept_id, args.before or "", args.after or "", args.insight)
+    )
+    conn.commit()
+
+    print(f"Recorded insight: {args.insight}")
+    if args.before and args.after:
+        print(f"  Before: {args.before}")
+        print(f"  After: {args.after}")
+
+
+def insight_list(args):
+    """List insights."""
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT i.key_insight, i.created_at, p.title as paper, c.name as concept
+        FROM insights i
+        LEFT JOIN papers p ON i.paper_id = p.id
+        LEFT JOIN concepts c ON i.concept_id = c.id
+        ORDER BY i.created_at DESC LIMIT 20
+    """).fetchall()
+
+    print("INSIGHTS:")
+    for row in rows:
+        context = ""
+        if row['paper']:
+            context = f" [{row['paper']}"
+            if row['concept']:
+                context += f" / {row['concept']}"
+            context += "]"
+        elif row['concept']:
+            context = f" [{row['concept']}]"
+        print(f"  {row['created_at'][:10]}: {row['key_insight']}{context}")
+
+
+# === QUESTION COMMANDS ===
+
+def question_add(args):
+    """Add a question."""
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO questions (question, context) VALUES (?, ?)",
+        (args.question, args.context or "")
+    )
+    conn.commit()
+    print(f"Added question: {args.question}")
+
+
+def question_list(args):
+    """List questions."""
+    conn = get_db()
+    query = "SELECT id, question, resolved FROM questions"
+    if not args.all:
+        query += " WHERE resolved = 0"
+    query += " ORDER BY created_at DESC"
+
+    rows = conn.execute(query).fetchall()
+    print("QUESTIONS:")
+    for row in rows:
+        status = "✓" if row['resolved'] else "?"
+        print(f"  [{row['id']}] {status} {row['question']}")
+
+
+def question_resolve(args):
+    """Resolve a question."""
+    conn = get_db()
+    result = conn.execute(
+        "UPDATE questions SET resolved = 1, resolution = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (args.resolution, args.id)
+    )
+    conn.commit()
+
+    if result.rowcount == 0:
+        print(f"Error: Question not found: {args.id}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Resolved question {args.id}")
+
+
+# === REVIEW COMMANDS (Spaced Repetition) ===
+
+def review_due(args):
+    """Show concepts due for review."""
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT c.name, c.confidence, c.understanding, MAX(r.reviewed_at) as last_review
+        FROM concepts c
+        LEFT JOIN reviews r ON c.id = r.concept_id
+        GROUP BY c.id
+        HAVING last_review IS NULL OR MAX(r.next_review) <= datetime('now')
+        ORDER BY last_review ASC
+        LIMIT 10
+    """).fetchall()
+
+    print("CONCEPTS DUE FOR REVIEW:")
+    if not rows:
+        print("  No concepts due for review!")
+        return
+
+    for row in rows:
+        last = row['last_review'][:10] if row['last_review'] else "never"
+        print(f"  [{row['confidence'][0].upper()}] {row['name']} (last: {last})")
+
+
+def review_done(args):
+    """Mark a concept as reviewed."""
+    conn = get_db()
+
+    row = conn.execute("SELECT id FROM concepts WHERE name = ?", (args.name,)).fetchone()
+    if not row:
+        print(f"Error: Concept '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    # Spaced repetition intervals
+    intervals = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}
+    next_review = datetime.now() + timedelta(days=intervals[args.quality])
+
+    conn.execute(
+        "INSERT INTO reviews (concept_id, quality, next_review) VALUES (?, ?, ?)",
+        (row['id'], args.quality, next_review.isoformat())
+    )
+    conn.commit()
+
+    print(f"Reviewed: {args.name} (quality {args.quality}) - next review: {next_review.strftime('%Y-%m-%d')}")
+
+
+# === SEARCH ===
+
+def search(args):
+    """Search across all knowledge."""
+    conn = get_db()
+    query = f"%{args.query}%"
+
+    print("SEARCH RESULTS:")
+
+    # Concepts
+    rows = conn.execute(
+        "SELECT name, understanding FROM concepts WHERE name LIKE ? OR understanding LIKE ?",
+        (query, query)
+    ).fetchall()
+    for row in rows:
+        short = (row['understanding'] or "")[:60]
+        if len(row['understanding'] or "") > 60:
+            short += "..."
+        print(f"  [concept] {row['name']}: {short}")
+
+    # Papers
+    rows = conn.execute(
+        "SELECT title FROM papers WHERE title LIKE ? OR summary LIKE ?",
+        (query, query)
+    ).fetchall()
+    for row in rows:
+        print(f"  [paper] {row['title']}")
+
+    # Insights
+    rows = conn.execute(
+        "SELECT key_insight FROM insights WHERE key_insight LIKE ?", (query,)
+    ).fetchall()
+    for row in rows:
+        short = row['key_insight'][:60]
+        if len(row['key_insight']) > 60:
+            short += "..."
+        print(f"  [insight] {short}")
+
+
+# === GRAPH ===
+
+def build_graph(conn, concept_id: int, depth: int, visited: set) -> dict:
+    """Recursively build graph from concept."""
+    row = conn.execute("SELECT name FROM concepts WHERE id = ?", (concept_id,)).fetchone()
+    node = {"name": row['name'], "connections": []}
+
+    if depth <= 0 or concept_id in visited:
+        return node
+
+    visited.add(concept_id)
+
+    edges = conn.execute("""
+        SELECT c.id, c.name, conn.relation FROM connections conn
+        JOIN concepts c ON conn.to_id = c.id WHERE conn.from_id = ?
+        UNION
+        SELECT c.id, c.name, conn.relation FROM connections conn
+        JOIN concepts c ON conn.from_id = c.id WHERE conn.to_id = ?
+    """, (concept_id, concept_id)).fetchall()
+
+    for edge in edges:
+        node["connections"].append({
+            "relation": edge['relation'],
+            "target": build_graph(conn, edge['id'], depth - 1, visited)
+        })
+
+    return node
+
+
+def print_graph_ascii(node: dict, indent: int = 0):
+    """Print graph in ASCII format."""
+    prefix = "  " * indent
+    print(f"{prefix}{node['name']}")
+    for edge in node.get("connections", []):
+        target = edge["target"]
+        if target.get("connections"):
+            print(f"{prefix}  └─[{edge['relation']}]─>")
+            print_graph_ascii(target, indent + 2)
+        else:
+            print(f"{prefix}  └─[{edge['relation']}]─> {target['name']}")
+
+
+def graph(args):
+    """Visualize concept connections."""
+    conn = get_db()
+
+    row = conn.execute("SELECT id FROM concepts WHERE name = ?", (args.concept,)).fetchone()
+    if not row:
+        print(f"Error: Concept '{args.concept}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    graph_data = build_graph(conn, row['id'], args.depth, set())
+
+    if args.format == "json":
+        print(json.dumps(graph_data, indent=2))
+    else:
+        print_graph_ascii(graph_data)
+
+
+# === STATS ===
+
+def stats(args):
+    """Show learning statistics."""
+    conn = get_db()
+
+    concept_count = conn.execute("SELECT COUNT(*) FROM concepts").fetchone()[0]
+    paper_count = conn.execute("SELECT COUNT(*) FROM papers").fetchone()[0]
+    insight_count = conn.execute("SELECT COUNT(*) FROM insights").fetchone()[0]
+    question_count = conn.execute("SELECT COUNT(*) FROM questions").fetchone()[0]
+    open_questions = conn.execute("SELECT COUNT(*) FROM questions WHERE resolved = 0").fetchone()[0]
+    connection_count = conn.execute("SELECT COUNT(*) FROM connections").fetchone()[0]
+
+    high = conn.execute("SELECT COUNT(*) FROM concepts WHERE confidence = 'high'").fetchone()[0]
+    med = conn.execute("SELECT COUNT(*) FROM concepts WHERE confidence = 'medium'").fetchone()[0]
+    low = conn.execute("SELECT COUNT(*) FROM concepts WHERE confidence = 'low'").fetchone()[0]
+
+    print("KNOWLEDGE STATS:")
+    print(f"  Concepts: {concept_count} (high: {high}, medium: {med}, low: {low})")
+    print(f"  Connections: {connection_count}")
+    print(f"  Papers read: {paper_count}")
+    print(f"  Insights recorded: {insight_count}")
+    print(f"  Questions: {question_count} ({open_questions} open)")
+
+
+# === EXPORT ===
+
+def export(args):
+    """Export all knowledge as JSON."""
+    conn = get_db()
+
+    data = {
+        "concepts": [],
+        "connections": [],
+        "papers": [],
+        "insights": [],
+        "questions": []
+    }
+
+    for row in conn.execute("SELECT id, name, understanding, confidence FROM concepts"):
+        data["concepts"].append(dict(row))
+
+    for row in conn.execute("""
+        SELECT c1.name as 'from', c2.name as 'to', conn.relation, conn.note
+        FROM connections conn
+        JOIN concepts c1 ON conn.from_id = c1.id
+        JOIN concepts c2 ON conn.to_id = c2.id
+    """):
+        data["connections"].append(dict(row))
+
+    for row in conn.execute("SELECT id, title, url, summary FROM papers"):
+        data["papers"].append(dict(row))
+
+    for row in conn.execute("SELECT key_insight, before_understanding, after_understanding FROM insights"):
+        data["insights"].append(dict(row))
+
+    for row in conn.execute("SELECT question, resolved, resolution FROM questions"):
+        data["questions"].append({"question": row['question'], "resolved": bool(row['resolved']), "resolution": row['resolution']})
+
+    print(json.dumps(data, indent=2))
+
+
+# === MAIN ===
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="kr",
+        description="Knowledge Research CLI - Track concepts, papers, and insights with SQLite"
+    )
+    subparsers = parser.add_subparsers(dest="command", help="Commands")
+
+    # concept commands
+    concept_parser = subparsers.add_parser("concept", help="Manage concepts")
+    concept_sub = concept_parser.add_subparsers(dest="subcommand")
+
+    add_p = concept_sub.add_parser("add", help="Add a concept")
+    add_p.add_argument("name", help="Concept name")
+    add_p.add_argument("--understanding", help="Your understanding")
+    add_p.add_argument("--confidence", choices=["low", "medium", "high"], default="low")
+    add_p.add_argument("--analogy", help="Intuitive analogy")
+    add_p.add_argument("--limits", help="Where the analogy breaks")
+    add_p.set_defaults(func=concept_add)
+
+    show_p = concept_sub.add_parser("show", help="Show concept details")
+    show_p.add_argument("name", help="Concept name")
+    show_p.set_defaults(func=concept_show)
+
+    update_p = concept_sub.add_parser("update", help="Update a concept")
+    update_p.add_argument("name", help="Concept name")
+    update_p.add_argument("--understanding", help="New understanding")
+    update_p.add_argument("--confidence", choices=["low", "medium", "high"])
+    update_p.set_defaults(func=concept_update)
+
+    list_p = concept_sub.add_parser("list", help="List concepts")
+    list_p.add_argument("--confidence", choices=["low", "medium", "high"])
+    list_p.set_defaults(func=concept_list)
+
+    del_p = concept_sub.add_parser("delete", help="Delete a concept")
+    del_p.add_argument("name", help="Concept name")
+    del_p.set_defaults(func=concept_delete)
+
+    # connect command
+    conn_parser = subparsers.add_parser("connect", help="Connect two concepts")
+    conn_parser.add_argument("from_concept", help="Source concept")
+    conn_parser.add_argument("to_concept", help="Target concept")
+    conn_parser.add_argument("--relation", default="relates-to", help="Relation type")
+    conn_parser.add_argument("--note", help="Connection note")
+    conn_parser.set_defaults(func=connect)
+
+    # paper commands
+    paper_parser = subparsers.add_parser("paper", help="Manage papers")
+    paper_sub = paper_parser.add_subparsers(dest="subcommand")
+
+    paper_add_p = paper_sub.add_parser("add", help="Add a paper")
+    paper_add_p.add_argument("title", help="Paper title")
+    paper_add_p.add_argument("--url", help="Paper URL")
+    paper_add_p.add_argument("--summary", help="Brief summary")
+    paper_add_p.set_defaults(func=paper_add)
+
+    paper_list_p = paper_sub.add_parser("list", help="List papers")
+    paper_list_p.set_defaults(func=paper_list)
+
+    paper_show_p = paper_sub.add_parser("show", help="Show paper details")
+    paper_show_p.add_argument("query", help="Paper ID or title")
+    paper_show_p.set_defaults(func=paper_show)
+
+    # insight commands
+    insight_parser = subparsers.add_parser("insight", help="Record insights")
+    insight_sub = insight_parser.add_subparsers(dest="subcommand")
+
+    insight_add_p = insight_sub.add_parser("add", help="Add an insight")
+    insight_add_p.add_argument("--insight", required=True, help="Key insight")
+    insight_add_p.add_argument("--concept", help="Related concept")
+    insight_add_p.add_argument("--paper", help="Related paper (ID or title)")
+    insight_add_p.add_argument("--before", help="Understanding before")
+    insight_add_p.add_argument("--after", help="Understanding after")
+    insight_add_p.set_defaults(func=insight_add)
+
+    insight_list_p = insight_sub.add_parser("list", help="List insights")
+    insight_list_p.set_defaults(func=insight_list)
+
+    # question commands
+    q_parser = subparsers.add_parser("question", help="Track questions")
+    q_sub = q_parser.add_subparsers(dest="subcommand")
+
+    q_add_p = q_sub.add_parser("add", help="Add a question")
+    q_add_p.add_argument("question", help="The question")
+    q_add_p.add_argument("--context", help="Context for the question")
+    q_add_p.set_defaults(func=question_add)
+
+    q_list_p = q_sub.add_parser("list", help="List questions")
+    q_list_p.add_argument("--all", action="store_true", help="Include resolved")
+    q_list_p.set_defaults(func=question_list)
+
+    q_resolve_p = q_sub.add_parser("resolve", help="Resolve a question")
+    q_resolve_p.add_argument("id", type=int, help="Question ID")
+    q_resolve_p.add_argument("--resolution", required=True, help="The resolution")
+    q_resolve_p.set_defaults(func=question_resolve)
+
+    # review commands
+    review_parser = subparsers.add_parser("review", help="Spaced repetition")
+    review_sub = review_parser.add_subparsers(dest="subcommand")
+
+    review_due_p = review_sub.add_parser("due", help="Show concepts due for review")
+    review_due_p.set_defaults(func=review_due)
+
+    review_done_p = review_sub.add_parser("done", help="Mark concept reviewed")
+    review_done_p.add_argument("name", help="Concept name")
+    review_done_p.add_argument("--quality", type=int, choices=[1, 2, 3, 4, 5], default=3, help="Recall quality (1-5)")
+    review_done_p.set_defaults(func=review_done)
+
+    # search command
+    search_parser = subparsers.add_parser("search", help="Search knowledge")
+    search_parser.add_argument("query", help="Search query")
+    search_parser.set_defaults(func=search)
+
+    # graph command
+    graph_parser = subparsers.add_parser("graph", help="Visualize connections")
+    graph_parser.add_argument("concept", help="Root concept")
+    graph_parser.add_argument("--depth", type=int, default=2, help="Traversal depth")
+    graph_parser.add_argument("--format", choices=["ascii", "json"], default="ascii")
+    graph_parser.set_defaults(func=graph)
+
+    # stats command
+    stats_parser = subparsers.add_parser("stats", help="Show statistics")
+    stats_parser.set_defaults(func=stats)
+
+    # export command
+    export_parser = subparsers.add_parser("export", help="Export as JSON")
+    export_parser.set_defaults(func=export)
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+
+    if hasattr(args, 'func'):
+        args.func(args)
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
