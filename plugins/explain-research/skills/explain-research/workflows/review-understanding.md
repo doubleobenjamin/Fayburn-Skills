@@ -1,10 +1,10 @@
 <required_reading>
 **Check knowledge state:**
 ```bash
-kr stats
-kr review due
-kr concept list --confidence low
-kr question list
+~/.claude/skills/explain-research/bin/kr stats
+~/.claude/skills/explain-research/bin/kr review due
+~/.claude/skills/explain-research/bin/kr concept list --confidence low
+~/.claude/skills/explain-research/bin/kr question list
 ```
 </required_reading>
 
@@ -15,8 +15,6 @@ Check and reinforce your understanding. Identify gaps, strengthen weak areas, an
 <process>
 
 <step name="1-select-review-mode">
-## Step 1: Select Review Mode
-
 How would you like to review?
 
 **Concept quiz**: Test understanding of specific concepts
@@ -29,15 +27,13 @@ Ask user preference or suggest based on knowledge state.
 </step>
 
 <step name="2-assess-knowledge-state">
-## Step 2: Assess Knowledge State
-
 Review the knowledge graph:
 
 ```bash
-kr stats
-kr concept list
-kr review due
-kr question list
+~/.claude/skills/explain-research/bin/kr stats
+~/.claude/skills/explain-research/bin/kr concept list
+~/.claude/skills/explain-research/bin/kr review due
+~/.claude/skills/explain-research/bin/kr question list
 ```
 
 **Output format:**
@@ -54,8 +50,6 @@ Recommended focus: [where to direct review]
 </step>
 
 <step name="3-execute-review">
-## Step 3: Execute Review
-
 Based on selected mode:
 
 **Concept Quiz:**
@@ -84,8 +78,6 @@ Present a new problem or paper snippet.
 </step>
 
 <step name="4-identify-gaps">
-## Step 4: Identify Gaps
-
 What did the review reveal?
 
 **Recall gaps**: Forgot specific details
@@ -104,8 +96,6 @@ Priority: [high/medium/low based on importance]
 </step>
 
 <step name="5-reinforce-and-correct">
-## Step 5: Reinforce and Correct
-
 For each gap:
 
 **Recall gaps**: Re-explain the concept, add memorable hooks
@@ -117,8 +107,6 @@ Use the update-model workflow for significant understanding gaps.
 </step>
 
 <step name="6-consolidate">
-## Step 6: Consolidate
-
 Summarize what was reinforced:
 
 **Output format:**
@@ -135,32 +123,28 @@ Confidence change: [overall assessment shift]
 </step>
 
 <step name="7-persist-review">
-## Step 7: Persist to Knowledge Graph
-
 Update knowledge graph with review results:
 
 ```bash
 # Mark concepts as reviewed with quality rating
 # Quality: 1=forgot, 2=struggled, 3=okay, 4=good, 5=perfect
-kr review done "Concept1" --quality 4
-kr review done "Concept2" --quality 3
+~/.claude/skills/explain-research/bin/kr review done "Concept1" --quality 4
+~/.claude/skills/explain-research/bin/kr review done "Concept2" --quality 3
 
 # Update confidence for concepts that changed
-kr concept update "WeakConcept" --confidence medium
+~/.claude/skills/explain-research/bin/kr concept update "WeakConcept" --confidence medium
 
 # Resolve any questions that were answered
-kr question resolve 1 --resolution "Answer discovered during review"
+~/.claude/skills/explain-research/bin/kr question resolve 1 --resolution "Answer discovered during review"
 
 # Add new questions that emerged
-kr question add "New question from review" --context "Review session"
+~/.claude/skills/explain-research/bin/kr question add "New question from review" --context "Review session"
 ```
 </step>
 
 </process>
 
 <spaced-repetition>
-## Spaced Repetition System
-
 The `kr review` commands implement spaced repetition:
 
 **Quality ratings determine next review:**
@@ -172,7 +156,7 @@ The `kr review` commands implement spaced repetition:
 
 **Check what's due:**
 ```bash
-kr review due
+~/.claude/skills/explain-research/bin/kr review due
 ```
 
 **Regular practice:** Check `kr review due` at start of each session.

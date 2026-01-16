@@ -5,8 +5,6 @@ Techniques for building effective analogies that transport intuition without cre
 <principles>
 
 <principle name="structural-over-surface">
-## Structure Over Surface
-
 Good analogies map relationships, not surface features.
 
 **Surface analogy (weak):**
@@ -21,8 +19,6 @@ Test: Does changing surface features break the analogy? If yes, it's structural.
 </principle>
 
 <principle name="specify-limitations">
-## Specify Limitations
-
 Every analogy breaks. Say where.
 
 **Template:**
@@ -33,8 +29,6 @@ Every analogy breaks. Say where.
 </principle>
 
 <principle name="familiar-domains">
-## Use Familiar Domains
-
 Draw from domains everyone knows:
 
 - **Physical**: Water flow, building construction, cooking
@@ -53,8 +47,6 @@ Draw from domains everyone knows:
 </principle>
 
 <principle name="progressive-refinement">
-## Progressive Refinement
-
 Start simple, add nuance.
 
 **Level 1 - Grounding:**
@@ -74,8 +66,6 @@ Each level inherits intuition from previous levels.
 <techniques>
 
 <technique name="near-far">
-## Near-Far Technique
-
 Find analogies at different distances:
 
 **Near analogy**: Same domain, similar mechanism
@@ -90,8 +80,6 @@ Use near for accuracy, far for insight. Often need both.
 </technique>
 
 <technique name="contrast-pair">
-## Contrast Pair Technique
-
 Define by what something is NOT:
 
 "Reinforcement learning isn't like supervised learning where you get the right answer. It's like learning to cook without recipes - you try things, taste the result, and adjust."
@@ -104,8 +92,6 @@ Pairs that clarify:
 </technique>
 
 <technique name="story-form">
-## Story Form Technique
-
 Wrap technical process in narrative:
 
 "Imagine you're at a party trying to find your friend. You scan the room (query), looking at each person (keys). When features match your memory of your friend (high attention score), you focus there and gather information (value). Attention is that scan-match-focus process, parallelized."
@@ -117,8 +103,6 @@ Stories add:
 </technique>
 
 <technique name="scale-shift">
-## Scale Shift Technique
-
 Make the abstract concrete by changing scale:
 
 "If the embedding space were a city, similar concepts would be neighbors. 'King' and 'queen' live on the same block. 'King' and 'banana' live across town."
@@ -131,8 +115,6 @@ Make the abstract concrete by changing scale:
 <anti-patterns>
 
 <anti-pattern name="false-precision">
-## False Precision
-
 Don't over-map details that don't transfer.
 
 Bad: "Layer 3 is like the visual cortex, layer 5 is like..."
@@ -142,8 +124,6 @@ Better: "Deep networks learn hierarchical features, simpler patterns first, comp
 </anti-pattern>
 
 <anti-pattern name="single-analogy-lock">
-## Single Analogy Lock
-
 Don't get stuck on one analogy.
 
 One analogy shows one face. Complex concepts need multiple angles:
@@ -155,8 +135,6 @@ Each illuminates different aspects.
 </anti-pattern>
 
 <anti-pattern name="cargo-cult-analogy">
-## Cargo Cult Analogy
-
 Don't use an analogy without understanding why it works.
 
 Bad: "It's like training a brain" (because someone said so)
@@ -168,8 +146,6 @@ Test: Can you explain WHY the analogy works?
 </anti-patterns>
 
 <application>
-## Using Analogies in Explanations
-
 **Opening**: Start with grounding analogy to create framework
 **Middle**: Use mini-analogies for each key concept
 **Technical parts**: Maintain analogy scaffolding while adding precision

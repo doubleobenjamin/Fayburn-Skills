@@ -5,7 +5,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 <foundational>
 
 <concept name="gradient-descent">
-## Gradient Descent
 **What it is**: Optimization algorithm that finds minimum of a function by following the slope downward.
 
 **Analogy**: Navigating a foggy mountain to find the lowest valley - you can only feel the slope under your feet, so you step downhill repeatedly.
@@ -19,7 +18,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="loss-function">
-## Loss Function
 **What it is**: Mathematical measure of how wrong the model's predictions are.
 
 **Analogy**: A scoreboard that tells you how badly you're losing - optimization tries to improve this score.
@@ -33,7 +31,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="backpropagation">
-## Backpropagation
 **What it is**: Algorithm to compute gradients of loss with respect to every parameter by working backward through the network.
 
 **Analogy**: Blame assignment - when the output is wrong, backprop figures out which earlier decisions contributed to the mistake and by how much.
@@ -44,7 +41,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="overfitting">
-## Overfitting
 **What it is**: Model performs well on training data but poorly on new data - it memorized rather than learned.
 
 **Analogy**: Student who memorized test answers vs. student who understood the subject. First fails when questions change.
@@ -61,7 +57,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 <architectures>
 
 <concept name="transformer">
-## Transformer
 **What it is**: Architecture that processes sequences using self-attention, enabling parallel computation and direct connections between any positions.
 
 **Analogy**: A group discussion where everyone can hear everyone simultaneously, rather than passing notes one person at a time (RNN).
@@ -78,7 +73,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="attention">
-## Attention Mechanism
 **What it is**: Mechanism that computes weighted combinations where weights depend on content - lets model focus on relevant parts.
 
 **Analogy**: A searchlight that can highlight multiple things at once with different intensities, where what gets highlighted depends on what you're looking for.
@@ -94,7 +88,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="embeddings">
-## Embeddings
 **What it is**: Dense vector representations where similar items are close in vector space.
 
 **Analogy**: GPS coordinates for concepts - items that are related are in the same neighborhood.
@@ -117,7 +110,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 <training-concepts>
 
 <concept name="pre-training">
-## Pre-training
 **What it is**: Training on large general data before specializing on specific task.
 
 **Analogy**: General education before specialization - learn to read, write, think before focusing on medicine or law.
@@ -133,7 +125,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="fine-tuning">
-## Fine-tuning
 **What it is**: Additional training on specific task/domain after pre-training.
 
 **Analogy**: Medical student doing residency - general training adapts to specialty.
@@ -149,7 +140,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="in-context-learning">
-## In-Context Learning
 **What it is**: Model adapts to new task from examples in the prompt, without parameter updates.
 
 **Analogy**: Showing a skilled person examples of what you want, and they figure out the pattern without explicit instruction.
@@ -168,7 +158,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 <emergent-phenomena>
 
 <concept name="scaling-laws">
-## Scaling Laws
 **What it is**: Predictable relationship between compute/data/parameters and model performance.
 
 **Key insight**: Performance improves as a power law with each factor (roughly log-linear on plots)
@@ -179,7 +168,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="emergent-capabilities">
-## Emergent Capabilities
 **What it is**: Abilities that appear suddenly at scale, not present in smaller models.
 
 **Examples**:
@@ -200,7 +188,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 <recent-concepts>
 
 <concept name="rlhf">
-## RLHF (Reinforcement Learning from Human Feedback)
 **What it is**: Training method where model is optimized to produce outputs humans prefer.
 
 **Process**:
@@ -216,7 +203,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="chain-of-thought">
-## Chain of Thought
 **What it is**: Prompting technique where model shows reasoning steps before final answer.
 
 **Analogy**: Showing your work in math - intermediate steps make complex reasoning tractable
@@ -232,7 +218,6 @@ Core AI/ML concepts with intuitive explanations and structural analogies. Refere
 </concept>
 
 <concept name="retrieval-augmented-generation">
-## RAG (Retrieval-Augmented Generation)
 **What it is**: Combining LLM with external retrieval - fetch relevant documents then generate based on them.
 
 **Analogy**: Open-book exam - you can look things up before answering

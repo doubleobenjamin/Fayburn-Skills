@@ -5,8 +5,6 @@ Patterns for building mental models that support intuitive reasoning. A good men
 <model-types>
 
 <type name="mechanism">
-## Mechanism Models
-
 Answer: "How does it work?"
 
 **Structure:**
@@ -41,8 +39,6 @@ Good for: Algorithms, processes, transformations
 </type>
 
 <type name="relational">
-## Relational Models
-
 Answer: "How does it connect to other things?"
 
 **Structure:**
@@ -74,8 +70,6 @@ Good for: Taxonomies, architectures, frameworks
 </type>
 
 <type name="causal">
-## Causal Models
-
 Answer: "Why does it happen?"
 
 **Structure:**
@@ -108,8 +102,6 @@ Good for: Phenomena, behaviors, emergent properties
 </type>
 
 <type name="constraint">
-## Constraint Models
-
 Answer: "What limits it?"
 
 **Structure:**
@@ -147,8 +139,6 @@ Good for: Trade-offs, engineering decisions, system design
 <building-patterns>
 
 <pattern name="anchor-bridge-destination">
-## Anchor-Bridge-Destination
-
 Start from known, build to unknown.
 
 **Anchor**: What you already understand well
@@ -164,8 +154,6 @@ Start from known, build to unknown.
 </pattern>
 
 <pattern name="progressive-refinement">
-## Progressive Refinement
-
 Start coarse, add detail.
 
 **Level 1**: Core intuition (one sentence)
@@ -183,8 +171,6 @@ Start coarse, add detail.
 </pattern>
 
 <pattern name="contrast-frame">
-## Contrast Frame
-
 Define by what it's not.
 
 **Template:**
@@ -197,8 +183,6 @@ Define by what it's not.
 </pattern>
 
 <pattern name="extreme-cases">
-## Extreme Cases
-
 Understand by pushing to limits.
 
 **Questions:**
@@ -221,8 +205,6 @@ Understand by pushing to limits.
 <quality-checks>
 
 <check name="prediction">
-## Can You Predict?
-
 A good mental model lets you predict outcomes.
 
 **Test**: Given a new scenario, what does your model say will happen?
@@ -233,8 +215,6 @@ Good model predicts: "Quadratic in context length, so 4x compute."
 </check>
 
 <check name="explanation">
-## Can You Explain?
-
 A good mental model generates explanations.
 
 **Test**: When you see a result, can your model explain why?
@@ -245,8 +225,6 @@ Good model explains: "More parameters → better compression → captures more p
 </check>
 
 <check name="generation">
-## Can You Generate?
-
 A good mental model enables creation.
 
 **Test**: Can you design something new using the model?
@@ -257,8 +235,6 @@ Good model generates: "Sparse attention patterns (local + strided + global) to r
 </check>
 
 <check name="connection">
-## Can You Connect?
-
 A good mental model links to other knowledge.
 
 **Test**: What other concepts does this relate to? How?
@@ -271,8 +247,6 @@ Good model connects: "Both are selective - limited capacity requires focusing re
 </quality-checks>
 
 <evolution>
-## Model Evolution
-
 Mental models mature through stages:
 
 **Fragile**: Can recall but easily confused

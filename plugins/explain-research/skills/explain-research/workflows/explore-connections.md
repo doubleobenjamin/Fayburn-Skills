@@ -1,8 +1,8 @@
 <required_reading>
 **Query knowledge graph for context:**
 ```bash
-kr concept list
-kr stats
+~/.claude/skills/explain-research/bin/kr concept list
+~/.claude/skills/explain-research/bin/kr stats
 ```
 
 **Read domain reference:**
@@ -16,8 +16,6 @@ Surface hidden connections between concepts, papers, or ideas. Find the links wh
 <process>
 
 <step name="1-gather-inputs">
-## Step 1: Gather Inputs
-
 What are you connecting?
 
 Options:
@@ -30,14 +28,12 @@ Get the specific items to explore.
 </step>
 
 <step name="2-map-existing-connections">
-## Step 2: Map Existing Connections
-
 Pull relevant entries from knowledge graph:
 
 ```bash
-kr concept show "ConceptA"
-kr concept show "ConceptB"
-kr graph "ConceptA" --depth 2
+~/.claude/skills/explain-research/bin/kr concept show "ConceptA"
+~/.claude/skills/explain-research/bin/kr concept show "ConceptB"
+~/.claude/skills/explain-research/bin/kr graph "ConceptA" --depth 2
 ```
 
 For each item:
@@ -63,8 +59,6 @@ MAPPING:
 </step>
 
 <step name="3-find-structural-similarities">
-## Step 3: Find Structural Similarities
-
 Look beyond surface features. Find structural parallels:
 
 **Process similarity**: Do they work the same way?
@@ -85,8 +79,6 @@ Implication: [what this means for understanding]
 </step>
 
 <step name="4-test-analogy-transfer">
-## Step 4: Test Analogy Transfer
-
 Can an analogy from one concept illuminate the other?
 
 Take your best analogy for A. Apply it to B.
@@ -106,8 +98,6 @@ Using [A's analogy] to understand [B]:
 </step>
 
 <step name="5-identify-generative-connections">
-## Step 5: Identify Generative Connections
-
 Which connections enable new thinking?
 
 A generative connection lets you:
@@ -129,8 +119,6 @@ Confidence: [strong/tentative/speculative]
 </step>
 
 <step name="6-surface-creative-possibilities">
-## Step 6: Surface Creative Possibilities
-
 What does this connection make possible?
 
 - **Research directions**: What could you investigate?
@@ -150,22 +138,20 @@ Read: [related work to explore]
 </step>
 
 <step name="7-persist-connections">
-## Step 7: Persist to Knowledge Graph
-
-Add discovered connections:
+Add discovered connections to the knowledge graph:
 
 ```bash
 # Create connection
-kr connect "ConceptA" "ConceptB" \
+~/.claude/skills/explain-research/bin/kr connect "ConceptA" "ConceptB" \
   --relation "analogous-to" \
   --note "Both use weighted aggregation for selection"
 
 # Record insight about the connection
-kr insight add \
+~/.claude/skills/explain-research/bin/kr insight add \
   --insight "Connection between A and B reveals common pattern of X"
 
 # Add questions that emerged
-kr question add "Could technique from A apply to B?" \
+~/.claude/skills/explain-research/bin/kr question add "Could technique from A apply to B?" \
   --context "Connection exploration"
 ```
 </step>
@@ -175,37 +161,31 @@ kr question add "Could technique from A apply to B?" \
 <connection-types>
 
 <type name="causal">
-## Causal Connection
 A influences or causes B.
 Example: Attention mechanism enables transformer performance
 </type>
 
 <type name="compositional">
-## Compositional Connection
 A is built from B (or vice versa).
 Example: Transformer = attention + feedforward + residual
 </type>
 
 <type name="analogical">
-## Analogical Connection
 A and B share structure but different domains.
 Example: Neural attention ~ human selective focus
 </type>
 
 <type name="oppositional">
-## Oppositional Connection
 A and B represent different choices on a trade-off.
 Example: Model size vs. inference speed
 </type>
 
 <type name="evolutionary">
-## Evolutionary Connection
 A developed into B over time.
 Example: RNN → LSTM → Transformer
 </type>
 
 <type name="problem-space">
-## Problem Space Connection
 A and B both address the same underlying challenge.
 Example: Dropout, batch norm, weight decay all fight overfitting
 </type>

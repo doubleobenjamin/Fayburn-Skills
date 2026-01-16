@@ -3,6 +3,16 @@ name: explain-research
 description: Explains research papers for intuitive understanding through analogical reasoning. Builds mental models, tracks evolving knowledge, and surfaces connections. Use when reading papers, updating understanding, or exploring research connections.
 ---
 
+<objective>
+Transform complex research into intuitive understanding through analogical reasoning. Build mental models you can think with, not facts you memorize. Track knowledge evolution and surface connections where insight lives.
+</objective>
+
+<quick_start>
+1. Select option 1 to explain a paper, or provide paper content directly
+2. For concept deep-dives, choose option 2
+3. Run `~/.claude/skills/explain-research/bin/kr stats` to see your knowledge state
+</quick_start>
+
 <essential_principles>
 
 <principle name="intuition-first">
@@ -22,7 +32,7 @@ Knowledge compounds through connections. Every new paper links to what you alrea
 </principle>
 
 <principle name="use-the-cli">
-Knowledge persists in SQLite via the `kr` CLI. Run commands to query, update, and explore the knowledge graph. The CLI should be installed to `~/.local/bin/kr` (run the install command from the plugin's bin/ directory).
+Knowledge persists in SQLite via the `kr` CLI. Run commands to query, update, and explore the knowledge graph. The CLI is at `~/.claude/skills/explain-research/bin/kr`.
 </principle>
 
 </essential_principles>
@@ -67,7 +77,7 @@ When input is provided, detect format and extract content before proceeding with
 <knowledge_system>
 Knowledge persists in SQLite via the `kr` CLI tool.
 
-**CLI Location:** `~/.local/bin/kr` (or run from plugin: `~/.claude/plugins/cache/explain-research/*/bin/kr`)
+**CLI Location:** `~/.claude/skills/explain-research/bin/kr`
 
 **Core Commands:**
 ```bash
