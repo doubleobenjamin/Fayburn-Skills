@@ -1,0 +1,240 @@
+<required_reading>
+**Read these files NOW:**
+1. references/analogy-techniques.md
+2. references/mental-model-patterns.md
+
+**Check current knowledge state:**
+```bash
+~/.claude/skills/explain-research/bin/kr stats
+~/.claude/skills/explain-research/bin/kr concept list
+```
+</required_reading>
+
+<objective>
+Transform a research paper into intuitive understanding through analogical reasoning. Build mental models that let you think creatively with the concepts, not just recite them.
+</objective>
+
+<process>
+
+<step name="1-extract-input">
+Get paper content from the provided source.
+
+**PDF file**: Read the file, extract key sections (abstract, intro, method, results, discussion)
+**Pasted text**: Work with provided excerpts
+**URL/arXiv**: Fetch content with WebFetch
+
+Focus on: abstract, introduction, core method, key results, discussion/implications.
+</step>
+
+<step name="2-identify-core-question">
+Every paper answers a question. Find it.
+
+Ask yourself:
+- What problem drove this research?
+- What gap in understanding does it fill?
+- What would change if this work didn't exist?
+
+**Output format:**
+```
+CORE QUESTION: [One sentence - what this paper is really asking]
+```
+</step>
+
+<step name="3-build-grounding-analogy">
+Before any technical detail, create an analogy that captures the essence.
+
+**Good analogies:**
+- Map structure, not just surface features
+- Use familiar domains (cooking, sports, navigation, building)
+- Are wrong in specific, learnable ways
+
+**Output format:**
+```
+GROUNDING ANALOGY:
+[Familiar situation] is like [paper's approach] because [structural similarity].
+
+This analogy breaks down when: [specific limitations]
+```
+</step>
+
+<step name="4-extract-key-concepts">
+Identify the concepts essential to understanding (3-5 max). For each:
+
+1. **Technical name** - what experts call it
+2. **Plain meaning** - what it actually does
+3. **Mini-analogy** - intuitive handle
+4. **Why it matters** - role in the bigger picture
+
+**Check if concept exists:**
+```bash
+~/.claude/skills/explain-research/bin/kr search "concept name"
+```
+
+**Output format:**
+```
+CONCEPT: [Name]
+Plain meaning: [One sentence]
+Analogy: [Familiar comparison]
+Matters because: [Role in paper's contribution]
+```
+</step>
+
+<step name="5-explain-mechanism">
+Walk through HOW the paper's approach works. Use the grounding analogy as scaffolding.
+
+Structure:
+1. Start with inputs (what goes in)
+2. Explain transformation (what happens)
+3. End with outputs (what comes out)
+4. Note key design choices and why they matter
+
+Use visuals if helpful:
+```
+[Input] → [Process A] → [Process B] → [Output]
+           ↑              ↑
+     [Why this way]  [Key insight]
+```
+</step>
+
+<step name="6-explicit-model-update">
+State clearly how understanding should change.
+
+**Output format:**
+```
+MENTAL MODEL UPDATE:
+
+BEFORE: You might have thought [common misconception or gap]
+AFTER: Now you understand [new insight]
+BECAUSE: [The evidence/reasoning from this paper]
+
+This changes how you think about: [related concepts or problems]
+```
+</step>
+
+<step name="7-surface-connections">
+Query existing knowledge to find links:
+```bash
+~/.claude/skills/explain-research/bin/kr concept list
+~/.claude/skills/explain-research/bin/kr search "related term"
+```
+
+Link this paper to existing knowledge:
+- What concepts does this relate to?
+- What papers or ideas does it build on or challenge?
+- What new questions does it open?
+
+**Output format:**
+```
+CONNECTIONS:
+- Relates to: [existing concept] - [how]
+- Builds on: [prior work] - [what it adds]
+- Opens questions about: [new territory]
+```
+</step>
+
+<step name="8-identify-exploration">
+What could you explore next based on this paper?
+
+- Concepts to go deeper on
+- Related papers to read
+- Applications to consider
+- Questions that emerged
+
+**Output format:**
+```
+EXPLORE NEXT:
+- Deep dive: [concept needing more attention]
+- Related: [papers or topics to investigate]
+- Apply: [potential applications or experiments]
+- Questions: [things you're now curious about]
+```
+</step>
+
+<step name="9-persist-knowledge">
+Record the paper and learnings to the knowledge graph:
+
+```bash
+# Add paper
+~/.claude/skills/explain-research/bin/kr paper add "Paper Title" --url "URL" --summary "Brief summary"
+
+# Add/update concepts
+~/.claude/skills/explain-research/bin/kr concept add "ConceptName" \
+  --understanding "What it is and does" \
+  --confidence medium \
+  --analogy "Intuitive comparison" \
+  --limits "Where analogy breaks"
+
+# Connect concepts
+~/.claude/skills/explain-research/bin/kr connect "ConceptA" "ConceptB" --relation "uses" --note "How they relate"
+
+# Record key insight
+~/.claude/skills/explain-research/bin/kr insight add \
+  --insight "The key learning" \
+  --concept "RelatedConcept" \
+  --before "What you thought before" \
+  --after "What you understand now"
+
+# Add open questions
+~/.claude/skills/explain-research/bin/kr question add "Question that emerged" --context "From this paper"
+```
+</step>
+
+</process>
+
+<output_formats>
+
+<format name="conversational">
+Explain interactively, checking understanding as you go. Pause after major sections. Invite questions. Adjust depth based on responses. (Default mode)
+</format>
+
+<format name="structured-summary">
+When requested, produce a markdown document:
+
+```markdown
+# [Paper Title]
+
+## Core Question
+[What this paper asks]
+
+## Grounding Analogy
+[The intuitive frame]
+
+## Key Concepts
+[Concept list with analogies]
+
+## How It Works
+[Mechanism explanation]
+
+## Mental Model Update
+[Before/after framing]
+
+## Connections
+[Links to existing knowledge]
+
+## Explore Next
+[Future directions]
+```
+</format>
+
+<format name="quick-take">
+For fast understanding:
+- Core question (1 sentence)
+- Grounding analogy (2-3 sentences)
+- Key insight (1-2 sentences)
+- Model update (before/after)
+</format>
+
+</output_formats>
+
+<success_criteria>
+Paper explanation complete when:
+- [ ] Core question clearly identified
+- [ ] Grounding analogy created and limitations noted
+- [ ] Key concepts extracted with mini-analogies
+- [ ] Mechanism explained using analogy scaffolding
+- [ ] Mental model update explicitly stated
+- [ ] Connections to existing knowledge surfaced
+- [ ] Exploration directions identified
+- [ ] Knowledge persisted via `kr` CLI
+- [ ] User can explain core idea back using analogies
+</success_criteria>
